@@ -17,9 +17,6 @@ class Remoteclient {
 
         curl_close($ch);
 
-        //
-        //print_r($result); // prints the contents of the collected file before writing..
-
         // the following lines write the contents to a file in the same directory (provided permissions etc)
         $fp = fopen($output_filename, 'w');
         fwrite($fp, $result);
