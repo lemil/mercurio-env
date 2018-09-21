@@ -1,7 +1,7 @@
 #
 # SQL Export
 # Created by Querious (201042)
-# Created: September 21, 2018 at 16:52:35 GMT-3
+# Created: September 21, 2018 at 18:02:11 GMT-3
 # Encoding: Unicode (UTF-8)
 #
 
@@ -45,7 +45,7 @@ CREATE TABLE `dump_job` (
   `ts_begin` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `ts_end` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id_djob`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 
 CREATE TABLE `dump_type` (
@@ -73,7 +73,7 @@ DROP PROCEDURE IF EXISTS `dump_job_new`;
 
 
 DELIMITER //
-CREATE DEFINER=`%`@`%` PROCEDURE `dump_job_new`(p_id_dtype int, p_url varchar (2048), p_request varchar (1024), OUT o_id_djob int, OUT o_hash varchar(128), OUT o_result int)
+CREATE DEFINER=`root`@`%` PROCEDURE `dump_job_new`(p_id_dtype int, p_url varchar (2048), p_request varchar (1024), OUT o_id_djob int, OUT o_hash varchar(128), OUT o_result int)
     MODIFIES SQL DATA
     DETERMINISTIC
 BEGIN
@@ -82,6 +82,7 @@ DECLARE v_dtype_exists INT;
 -- Vars
 SET v_dtype_exists := 0;
 SET o_result := 1;
+SET o_hash := ( SELECT CAST(UUID() AS CHAR) );
 
 -- Validate
 SELECT COUNT(1) 
@@ -108,12 +109,15 @@ END IF;
 IF (o_result = 0) THEN
   SET o_result := 0;
 ELSE
-  SET o_hash := (SELECT UUID());
 
-  INSERT INTO dump_data ( id_dtype,   hash,   url,   request,   response ) VALUES ( p_id_dtype, v_hash, p_url, p_request, p_response );
+  INSERT INTO dump_job ( id_dtype, hash, url, request ) 
+    VALUES ( p_id_dtype, o_hash, p_url, p_request );
 
-  SELECT id_djob INTO o_id_djob FROM dump_data WHERE hash like o_hash;
-
+  SELECT id_djob INTO o_id_djob 
+    FROM dump_job WHERE hash like o_hash;
+  
+  COMMIT;
+  
 END IF;
 
 END;
@@ -137,6 +141,13 @@ UNLOCK TABLES;
 LOCK TABLES `dump_job` WRITE;
 TRUNCATE `dump_job`;
 ALTER TABLE `dump_job` DISABLE KEYS;
+INSERT INTO `dump_job` (`id_djob`, `id_dtype`, `hash`, `url`, `request`, `response`, `ts_begin`, `ts_end`) VALUES 
+	(1,1,'jjj','jkjkjkj','kjk','kjk','2018-09-21 20:39:06',NULL),
+	(2,0,NULL,'jjj','','','2018-09-21 20:39:07',NULL),
+	(3,1,'a7b86931-bdde-11e8-9b6d-0242ac110002','http://www.google.com.ar/','{"a": "1"}','','2018-09-21 20:41:02',NULL),
+	(4,1,'c9946378-bdde-11e8-9b6d-0242ac110002','http://www.google.com.ar/','{"a": "1"}','','2018-09-21 20:41:59',NULL),
+	(5,1,'d5ab33b7-bdde-11e8-9b6d-0242ac110002','http://www.google.com.ar/','{"a": "1"}','','2018-09-21 20:42:19',NULL),
+	(6,1,'e4d69a17-bdde-11e8-9b6d-0242ac110002','http://www.google.com.ar/','{"a": "1"}','','2018-09-21 20:42:45',NULL);
 ALTER TABLE `dump_job` ENABLE KEYS;
 UNLOCK TABLES;
 

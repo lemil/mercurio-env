@@ -117,10 +117,48 @@ class Masivos extends CI_Controller {
 
 	public function guardar($filename)
 	{
+		//
+		$this->load->database();
+
+
+		//Get JobId
+		$id_djob = $this->newJob();
+
+
+
+		//Insert row
+		foreach($dump_data as $row) {
+			$data = array(
+			        'id_djob' 		=> $id_djob,
+			        'id_vendor' 	=> 'My Name',
+			        'vendor_art' 	=> $row['art_id'],
+			        'vendor_desc' 	=> $row['desc'],
+			        'vendor_uxb'	=> $row['uxb'], 
+			        'vendor_prc' 	=> $row['prc_raw']
+			);
+
+			$this->db->insert('mytable', $data);
+		}
 		
 
 
+	}
 
+	public function newJob() {
+
+/*
+Field,Type,Null,Key,Default,Extra
+"id_djob","int(11)","NO","PRI",,"auto_increment"
+"id_dtype","int(11)","NO",,"0",
+"url","varchar(2048)","NO",,,
+"request","varchar(1024)","YES",,,
+"response","varchar(1024)","YES",,,
+"ts_begin","timestamp","NO",,"CURRENT_TIMESTAMP",
+"ts_end","timestamp","YES",,,
+*/
+		$this->
+
+		$this->db->
 	}
 
 
