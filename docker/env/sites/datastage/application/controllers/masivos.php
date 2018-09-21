@@ -5,10 +5,39 @@ require_once APPPATH."/third_party/PHPExcel.php";
 
 class Masivos extends CI_Controller {
 
+	//
+	$url_prefix = "https://www.masivos.com/actualizables/";
+	$dest_prefix = "./upload/";
+	$dump_data = array();
+
+
 	public function index()
 	{
 		$this->load->view('masivos/main');
 	}
+
+
+	public function run()
+	{
+		$dmy =  date('dmy',  strtotime("last Saturday") ); //Ej: 150918
+		$filename = $url_prefix.'/precios'.$dmy.'.xls';
+		
+
+		if($cont == 1){	//Step1
+			$cont = $this->descarga($filename);
+		}
+
+		if($cont == 1){	//Step2
+			$cont = $this->procesar($filename);
+		}
+
+		if($cont == 1){	//Step3
+			$cont = $this->guardar($filename);
+		}
+
+
+	}
+
 
 	public function descarga($filename)
 	{
@@ -16,14 +45,15 @@ class Masivos extends CI_Controller {
 		$this->load->library('remoteclient');
         $this->load->library('excel');
 
-		$url = "https://www.masivos.com/actualizables/".$filename;
+		$url = $url_prefix.$filename;
 
 		echo $url;
 
-		$destfile = "./upload/" . $filename;
+		$destfile = $dest_prefix. $filename;
 
 		$this->remoteclient->getfile($url,$destfile);
 
+		return 1;
 	}
 
 	public function procesar($filename)
@@ -69,16 +99,29 @@ class Masivos extends CI_Controller {
 				    		'uxb' 		=>  ($uxb 		== null ? 1: $uxb),
 				    		'prc_raw' 	=>  ($prc_raw 	== null ? 0: $prc_raw)
 		    				 );
+
 		    	$pricelist[$qprices++] = $r;
 			}
 		
 		}
 
-		$json_pricelist = json_encode($pricelist);
+		$dump_data = $pricelist 
 
-		header("Content-type: application/json; charset=utf-8");
-		
-		echo $json_pricelist;
+		return 1;
+
+		//$json_pricelist = json_encode($pricelist);
+		//header("Content-type: application/json; charset=utf-8");
+		//echo $json_pricelist;
 	}
+
+
+	public function guardar($filename)
+	{
+		
+
+
+
+	}
+
 
 }
