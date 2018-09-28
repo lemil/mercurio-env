@@ -21,6 +21,6 @@ mysql:
     - "33060:33060"
   environment:
     - MYSQL_ROOT_PASSWORD=123456
-    - MYSQL_DATABASE=datastage
-  volumes: 
+    - MYSQL_DATABASE=edge     
+  volumes:
     - ./etc/mysql:/docker-entrypoint-initdb.d

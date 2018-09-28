@@ -6,60 +6,83 @@ require_once APPPATH."/third_party/PHPExcel.php";
 class Masivos extends CI_Controller {
 
 	//
-	$url_prefix = "https://www.masivos.com/actualizables/";
-	$dest_prefix = "./upload/";
-	$dump_data = array();
+	private $url_prefix = 'https://www.masivos.com/actualizables/';
+	private $dest_prefix = './upload/';
+	private $dump_data = array();
+	private $filename_template = 'precios%s.xls';
+	private $filename = null;
 
+	public function __construct(){
+		parent::__construct();
 
-	public function index()
-	{
-		$this->load->view('masivos/main');
+		$dmy =  date('dmy',  strtotime("last Saturday") ); //Ej: 150918
+		$this->filename = sprintf($this->filename_template,$dmy);
 	}
 
 
+	public function getRemoteUrl() {
+		return $this->url_prefix.$this->filename;
+	}
+
+	public function getLocalFilename(){
+		return $this->dest_prefix.$this->filename;
+	}
+
+	//Pages
+	public function index() {
+		$this->load->view('masivos/main');
+	}
+
+	//Process
 	public function run()
 	{
-		$dmy =  date('dmy',  strtotime("last Saturday") ); //Ej: 150918
-		$filename = $url_prefix.'/precios'.$dmy.'.xls';
-		
+		//libs
+		$this->load->library('remoteclient');
+        $this->load->library('excel');
+        $this->load->database();
 
+
+
+		$filename = $this->filename;
+		
+		echo 'Step1 - Download... </br>'; 
+		$cont = 1;
 		if($cont == 1){	//Step1
 			$cont = $this->descarga($filename);
 		}
 
+		echo 'Step2 - Read... </br>'; 
 		if($cont == 1){	//Step2
 			$cont = $this->procesar($filename);
 		}
 
+		echo 'Step3 - Save... </br>'; 
 		if($cont == 1){	//Step3
 			$cont = $this->guardar($filename);
 		}
 
-
+		echo 'Done!</br>';
 	}
 
 
 	public function descarga($filename)
 	{
-		//libs
-		$this->load->library('remoteclient');
-        $this->load->library('excel');
 
-		$url = $url_prefix.$filename;
-
-		echo $url;
-
-		$destfile = $dest_prefix. $filename;
+        $url = $this->getRemoteUrl();
+		$destfile = $this->getLocalFilename();
 
 		$this->remoteclient->getfile($url,$destfile);
 
 		return 1;
 	}
 
-	public function procesar($filename)
-	{
 
+	public function procesar($filename)
+	{ 
 		$inputFileName = './upload/' . $filename;
+		
+		echo $inputFileName .'<br>';
+
 
 		//  Read your Excel workbook
 		try {
@@ -69,6 +92,7 @@ class Masivos extends CI_Controller {
 		} catch(Exception $e) {
 		    die('Error loading file "'.pathinfo($inputFileName,PATHINFO_BASENAME).'": '.$e->getMessage());
 		}
+
 
 		//  Get worksheet dimensions
 		$sheet = $objPHPExcel->getSheet(1); 
@@ -102,32 +126,23 @@ class Masivos extends CI_Controller {
 
 		    	$pricelist[$qprices++] = $r;
 			}
-		
 		}
 
-		$dump_data = $pricelist 
+		$dump_data = $pricelist;
+
+		var_dump($dump_data);
 
 		return 1;
-
-		//$json_pricelist = json_encode($pricelist);
-		//header("Content-type: application/json; charset=utf-8");
-		//echo $json_pricelist;
 	}
 
 
 	public function guardar($filename)
 	{
-		//
-		$this->load->database();
-
-
 		//Get JobId
 		$id_djob = $this->newJob();
 
-
-
 		//Insert row
-		foreach($dump_data as $row) {
+		foreach($this->dump_data as $row) {
 			$data = array(
 			        'id_djob' 		=> $id_djob,
 			        'id_vendor' 	=> 'My Name',
@@ -137,28 +152,30 @@ class Masivos extends CI_Controller {
 			        'vendor_prc' 	=> $row['prc_raw']
 			);
 
-			$this->db->insert('mytable', $data);
+			$this->db->insert('dump_data', $data);
 		}
 		
-
-
+		return 1;
 	}
 
 	public function newJob() {
 
-/*
-Field,Type,Null,Key,Default,Extra
-"id_djob","int(11)","NO","PRI",,"auto_increment"
-"id_dtype","int(11)","NO",,"0",
-"url","varchar(2048)","NO",,,
-"request","varchar(1024)","YES",,,
-"response","varchar(1024)","YES",,,
-"ts_begin","timestamp","NO",,"CURRENT_TIMESTAMP",
-"ts_end","timestamp","YES",,,
-*/
-		$this->
+	/*
+	Field,Type,Null,Key,Default,Extra
+	"id_djob","int(11)","NO","PRI",,"auto_increment"
+	"id_dtype","int(11)","NO",,"0",
+	"url","varchar(2048)","NO",,,
+	"request","varchar(1024)","YES",,,
+	"response","varchar(1024)","YES",,,
+	"ts_begin","timestamp","NO",,"CURRENT_TIMESTAMP",
+	"ts_end","timestamp","YES",,,
+	*/
+		$data = array(
+		        'id_dtype' 		=> 1,
+		        'url' 			=> $this->getRemoteUrl()
+		);
 
-		$this->db->
+		$this->db->insert('dump_job', $data);
 	}
 
 
