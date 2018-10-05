@@ -30,7 +30,10 @@ class Masivos extends CI_Controller {
 
 	//Pages
 	public function index() {
-		$this->load->view('masivos/main');
+		$data = array();
+		$data['filename'] = $this->getRemoteUrl();
+
+		$this->load->view('masivos/main', $data);
 	}
 
 	//Process

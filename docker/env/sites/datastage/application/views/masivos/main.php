@@ -74,7 +74,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 		<p>Process</p>
 
 		<code>
-		<a href="./masivos/procesar/precios150918.xls">https://www.masivos.com/actualizables/precios150918.xls</a>
+		<a href="<?php echo $filename ?>"><?php echo $filename ?></a>
 		</code>
 
 	</div>
